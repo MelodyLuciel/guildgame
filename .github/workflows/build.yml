@@ -37,7 +37,15 @@ jobs:
           pip install pyinstaller
 
       - name: Build with PyInstaller
-        run: pyinstaller --onefile --name GuildGame game.py
+        run: pyinstaller --onefile --name GuildGame \
+          --hidden-import modules.tabs \
+          --hidden-import modules.adventurerGeneration \
+          --hidden-import modules.questGeneration \
+          --hidden-import modules.armory \
+          --hidden-import modules.randomEvents \
+          --hidden-import modules.facilities \
+          --hidden-import modules.raidBoss \
+          game.py
 
       - name: Rename binary (Linux/macOS)
         if: runner.os != 'Windows'
