@@ -275,7 +275,10 @@ def renderArmoryTab(guildArmory, armoryCategoryIndex, guildRoster, selectedIndex
                 slotLabel = slot.capitalize()
                 if gear:
                     bonusText = ar.formatGearBonus(gear)
-                    if slot == "relic":
+                    owned = gear.get('heroOwned', False)
+                    if owned:
+                        print(f"  {slotLabel}: [{gear['name']}  {bonusText}]  {term.bold_cyan('[OWNED]')}")
+                    elif slot == "relic":
                         print(f"  {slotLabel}: [{gear['name']}  {bonusText}]  [U]nassign")
                     else:
                         print(f"  {slotLabel}: [{gear['name']}  {bonusText}]  [U]nassign | [P]urchase {gear['heroCost']}g")

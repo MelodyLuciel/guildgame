@@ -12,6 +12,7 @@ import modules.randomEvents as re
 import modules.facilities as fc
 import modules.raidBoss as rb
 import modules.tabs as tabs
+import modules.menu as mn
 
 term = Terminal()
 
@@ -177,7 +178,7 @@ with term.cbreak(), term.hidden_cursor():
                 elif raidStatus == "done":
                     controls.append("[V] View Log")
                     controls.append("[R] New Raid")
-            controls.append("[X] Quit")
+            controls.append("[`] Menu")
             controlLine = "  |  ".join(controls)
             if len(controlLine) > term.width:
                 mid = len(controls) // 2
@@ -188,6 +189,73 @@ with term.cbreak(), term.hidden_cursor():
                 print(controlLine)
 
         key = term.inkey()
+
+        if key == '`':
+            gs = {
+                "guildRoster": guildRoster,
+                "guildBank": guildBank,
+                "selectedIndex": selectedIndex,
+                "renown": renown,
+                "month": month,
+                "benchRecruit": benchRecruit,
+                "questSlots": questSlots,
+                "selectedQuestIndex": selectedQuestIndex,
+                "taggedQuestSlot": taggedQuestSlot,
+                "currentDay": currentDay,
+                "daysLeft": daysLeft,
+                "rerollsLeft": rerollsLeft,
+                "currentTab": currentTab,
+                "facilities": facilities,
+                "selectedFacilityIndex": selectedFacilityIndex,
+                "monthStats": monthStats,
+                "eventsFiredThisMonth": eventsFiredThisMonth,
+                "partyQuest": partyQuest,
+                "partySize": partySize,
+                "partyMembers": partyMembers,
+                "guildArmory": guildArmory,
+                "armoryCategoryIndex": armoryCategoryIndex,
+                "selectedGearIndex": selectedGearIndex,
+                "raidBoss": raidBoss,
+                "raidStatus": raidStatus,
+                "raidPrepDaysLeft": raidPrepDaysLeft,
+                "raidResult": raidResult,
+            }
+            action = mn.showMainMenu(gs)
+            if action == "quit":
+                print(term.clear)
+                print("Thanks for playing!")
+                break
+            elif action == "load":
+                guildRoster = gs["guildRoster"]
+                guildBank = gs["guildBank"]
+                selectedIndex = gs["selectedIndex"]
+                renown = gs["renown"]
+                month = gs["month"]
+                benchRecruit = gs["benchRecruit"]
+                questSlots = gs["questSlots"]
+                selectedQuestIndex = gs["selectedQuestIndex"]
+                taggedQuestSlot = gs["taggedQuestSlot"]
+                currentDay = gs["currentDay"]
+                daysLeft = gs["daysLeft"]
+                rerollsLeft = gs["rerollsLeft"]
+                currentTab = gs["currentTab"]
+                facilities = gs["facilities"]
+                selectedFacilityIndex = gs["selectedFacilityIndex"]
+                monthStats = gs["monthStats"]
+                eventsFiredThisMonth = gs["eventsFiredThisMonth"]
+                partyQuest = gs["partyQuest"]
+                partySize = gs["partySize"]
+                partyMembers = gs["partyMembers"]
+                guildArmory = gs["guildArmory"]
+                armoryCategoryIndex = gs["armoryCategoryIndex"]
+                selectedGearIndex = gs["selectedGearIndex"]
+                raidBoss = gs["raidBoss"]
+                raidStatus = gs["raidStatus"]
+                raidPrepDaysLeft = gs["raidPrepDaysLeft"]
+                raidResult = gs["raidResult"]
+                taxQuota = ag.getRenownCfg(renown)["tax"]
+                actionMessage = "Game loaded."
+            continue
 
         if key == '1':
             currentTab = 1
@@ -203,11 +271,6 @@ with term.cbreak(), term.hidden_cursor():
             currentTab = 6
         elif key == '7' and renown >= 5:
             currentTab = 7
-
-        elif key.lower() == 'x':
-            print(term.clear)
-            print("Thanks for playing!")
-            break
 
         elif key == ' ':
             if not tabs.confirmAdvance():
@@ -655,11 +718,18 @@ with term.cbreak(), term.hidden_cursor():
                     ])
                     confirm = term.inkey()
                     if confirm.lower() == 'y':
+                        lostGear = []
                         for slot, gear in worker.get('equipment', {}).items():
                             if gear is not None:
-                                guildArmory[slot].append(gear)
+                                if gear.get('heroOwned'):
+                                    lostGear.append(gear['name'])
+                                else:
+                                    guildArmory[slot].append(gear)
                                 worker['equipment'][slot] = None
-                        actionMessage = f"{worker['name']} dismissed (contract expired)."
+                        msg = f"{worker['name']} dismissed (contract expired)."
+                        if lostGear:
+                            msg += f" They took their gear: {', '.join(lostGear)}."
+                        actionMessage = msg
                         guildRoster.pop(selectedIndex)
                         if selectedIndex >= len(guildRoster):
                             selectedIndex = max(0, len(guildRoster) - 1)
@@ -679,11 +749,18 @@ with term.cbreak(), term.hidden_cursor():
                     if confirm.lower() == 'y':
                         if guildBank >= cost:
                             guildBank -= cost
+                            lostGear = []
                             for slot, gear in worker.get('equipment', {}).items():
                                 if gear is not None:
-                                    guildArmory[slot].append(gear)
+                                    if gear.get('heroOwned'):
+                                        lostGear.append(gear['name'])
+                                    else:
+                                        guildArmory[slot].append(gear)
                                     worker['equipment'][slot] = None
-                            actionMessage = f"{worker['name']} terminated. Paid {cost}g compensation."
+                            msg = f"{worker['name']} terminated. Paid {cost}g compensation."
+                            if lostGear:
+                                msg += f" They took their gear: {', '.join(lostGear)}."
+                            actionMessage = msg
                             guildRoster.pop(selectedIndex)
                             if selectedIndex >= len(guildRoster):
                                 selectedIndex = max(0, len(guildRoster) - 1)
@@ -736,6 +813,9 @@ with term.cbreak(), term.hidden_cursor():
                 hero = guildRoster[selectedIndex]
                 if hero['equipment'][cat] is not None:
                     gear = hero['equipment'][cat]
+                    if gear.get('heroOwned'):
+                        actionMessage = f"Can't unassign — {gear['name']} belongs to {hero['name']} now."
+                        continue
                     hero['equipment'][cat] = None
                     guildArmory[cat].append(gear)
                     actionMessage = f"Unassigned {gear['name']} from {hero['name']}."
@@ -753,12 +833,15 @@ with term.cbreak(), term.hidden_cursor():
                 hero = guildRoster[selectedIndex]
                 gear = hero['equipment'][cat]
                 if gear is not None:
+                    if gear.get('heroOwned'):
+                        actionMessage = f"This {gear['name']} already belongs to {hero['name']}!"
+                        continue
                     if hero['gold'] >= gear['heroCost']:
                         hero['gold'] -= gear['heroCost']
                         guildBank += gear['heroCost']
-                        hero['equipment'][cat] = None
+                        gear['heroOwned'] = True
                         monthStats["heroGearPurchases"] = monthStats.get("heroGearPurchases", 0) + 1
-                        actionMessage = f"{hero['name']} purchased {gear['name']} for {gear['heroCost']}g! Gear is now theirs permanently."
+                        actionMessage = f"{hero['name']} purchased {gear['name']} for {gear['heroCost']}g! It's theirs forever."
                     else:
                         actionMessage = f"{hero['name']} only has {hero['gold']}g — needs {gear['heroCost']}g to purchase."
                 else:

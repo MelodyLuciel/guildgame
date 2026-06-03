@@ -121,10 +121,10 @@ A gear system with four categories — Weapons, Armor, Talismans, and Relics —
 - `←`/`→` — Switch gear category (4 categories)
 - `[`/`]` — Select gear item
 - `A` — Assign selected gear to selected hero (guild stock → hero equipment)
-- `U` — Unassign gear from hero (hero equipment → guild stock)
-- `P` — Hero permanently purchases equipped gear with personal gold (removed from guild stock; relics cannot be purchased)
+- `U` — Unassign gear from hero (hero equipment → guild stock; blocked on hero-owned gear)
+- `P` — Hero purchases equipped gear with personal gold (gear stays equipped, marked hero-owned; relics cannot be purchased)
 
-Heroes can also permanently claim gear using their personal gold (the 40% heroCut from quests). This creates risk — if they leave, that mythril gear is gone.
+**Hero-owned gear:** Selling gear to a hero gives the guild instant gold, but the gear is permanently bound to that hero. If they later leave the guild via dismissal or termination, any hero-owned gear leaves with them — it's gone from the armory for good. This creates a strategic trade-off: quick gold now vs. long-term equipment flexibility.
 
 ### Random Periodic Events
 Each day after advancing, there's a ~25–35% chance (scaling with renown) that a random event triggers. Each event presents an interactive choice with lasting consequences.
@@ -186,11 +186,24 @@ An endgame capstone available at Renown 5 (Mythic Circle). Requires a full roste
 
 ---
 
+### Save & Load
+
+Press `` ` `` (backtick) at any time to open the menu with three options:
+
+- **`[S]` Save Game** — Saves your current progress to one of 3 slots. Save files are stored in `~/.guildgame/`.
+- **`[L]` Load Game** — Loads from a selected slot. Slot previews show the month, day, and renown so you can pick the right one.
+- **`[X]` Quit Game** — Confirmation dialog before exiting. Unsaved progress is lost.
+
+All save slots are independent — you can maintain multiple parallel campaigns.
+
+---
+
 ## Controls Reference
 
 |   Key   |   Context   |                      Action                      |
 |---------|-------------|--------------------------------------------------|
 | `1`–`7` | Global      | Switch tabs                                      |
+| `` ` `` | Global      | Open menu (Save / Load / Quit)                   |
 | `Space` | Global      | Advance one day (with confirmation)              |
 | `X`     | Global      | Quit game                                        |
 | `A`     | Recruitment | Hire the displayed recruit                       |
@@ -230,6 +243,9 @@ When assigning gear from the armory, the `A` key always equipped the first item 
 
 ### Status bar didn't reflect tax edict day reduction
 The Royal Tax Edict event could subtract 3 days from the month via `daysLeft`, but the status bar hardcoded `/30` rather than reading the actual `daysLeft` value. Fixed — `renderStatusBar` now receives and displays the real remaining days.
+
+### Terminal size clipping
+The UI assumed a minimum terminal size of 158×35 rows, causing tabs, status bar, and controls to clip out of view on smaller laptop screens. Fixed — the layout now compacts the header and footer (removing 3 rows of wasted gaps), adapts controls to terminal width (auto-split into multiple rows when too long), and truncates the roster tab when space is limited. Minimum supported size is 60×25. A startup warning prompts the user to enlarge their terminal if below the minimum.
 
 ---
 
