@@ -2,9 +2,9 @@ import re
 import sys
 import textwrap
 from blessed import Terminal
-from modules import adventurerGeneration as ag
-from modules import armory as ar
-from modules import facilities as fc
+import modules.adventurerGeneration as ag
+import modules.armory as ar
+import modules.facilities as fc
 from modules.questGeneration import partySizeMult
 
 term = Terminal()

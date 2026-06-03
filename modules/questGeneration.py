@@ -1,5 +1,5 @@
 import random
-from modules import adventurerGeneration as ag
+import modules.adventurerGeneration as ag
 
 questPrefix = ["The Forgotten", "The Sunken", "The Cursed", "The Hidden", "The Golden", "The Haunted"]
 questLocations = ["Crypt", "Grotto", "Catacombs", "Tower", "Ruins", "Forest", "Vault"]

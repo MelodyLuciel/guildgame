@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
+import warnings
 import random
+
+warnings.filterwarnings("ignore", message="unknown terminal capability:.*ssupm")
+
 from blessed import Terminal
-from modules import adventurerGeneration as ag
-from modules import questGeneration as qg
-from modules import armory as ar
-from modules import randomEvents as re
-from modules import facilities as fc
-from modules import raidBoss as rb
-from modules import tabs
+import modules.adventurerGeneration as ag
+import modules.questGeneration as qg
+import modules.armory as ar
+import modules.randomEvents as re
+import modules.facilities as fc
+import modules.raidBoss as rb
+import modules.tabs as tabs
 
 term = Terminal()
 

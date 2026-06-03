@@ -1,5 +1,5 @@
 import random
-from modules import adventurerGeneration as ag
+import modules.adventurerGeneration as ag
 
 bossThemes = [
     {
