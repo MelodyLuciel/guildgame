@@ -15,6 +15,20 @@ import modules.tabs as tabs
 
 term = Terminal()
 
+if term.height < 25 or term.width < 60:
+    with term.fullscreen():
+        print(term.clear)
+        print(term.bold_red("⚠  TERMINAL TOO SMALL  ⚠"))
+        print()
+        print(f"Detected: {term.width} × {term.height}")
+        print(f"Minimum required: 60 × 25")
+        print()
+        print("Please enlarge your terminal window,")
+        print("reduce font size, or use fullscreen mode.")
+        print()
+        print(term.italic("Press any key to continue anyway..."))
+        term.inkey()
+
 # --- GAME STATE ---
 guildRoster = []
 guildBank = 250
@@ -124,10 +138,9 @@ with term.cbreak(), term.hidden_cursor():
         if renown >= 5 and raidBoss is None:
             raidBoss = rb.generateBoss(renown)
 
-        with term.location(0, term.height - 7):
-            print("-" * 158)
+        with term.location(0, term.height - 4):
             print(term.italic_white(f"LOG: {actionMessage}"))
-            print("-" * 158)
+        with term.location(0, term.height - 3):
             controls = ["[SPACE] Advance Day"]
             if currentTab == 1:
                 controls.append("[A] Hire Recruit")
@@ -165,7 +178,14 @@ with term.cbreak(), term.hidden_cursor():
                     controls.append("[V] View Log")
                     controls.append("[R] New Raid")
             controls.append("[X] Quit")
-            print("  |  ".join(controls))
+            controlLine = "  |  ".join(controls)
+            if len(controlLine) > term.width:
+                mid = len(controls) // 2
+                print("  |  ".join(controls[:mid]))
+                with term.location(0, term.height - 2):
+                    print("  |  ".join(controls[mid:]))
+            else:
+                print(controlLine)
 
         key = term.inkey()
 

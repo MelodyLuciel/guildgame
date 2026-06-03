@@ -49,9 +49,9 @@ def renderStatusBar(guildBank, currentDay, daysLeft, renown, guildRoster, taxQuo
         print(term.cyan(status))
 
 def renderRecruitTab(benchRecruit, guildRoster, guildBank, rerollsLeft, renown):
-    with term.location(0, 3):
+    with term.location(0, 2):
         print(term.bold_cyan("=== RECRUITMENT BENCH ==="))
-    with term.location(0, 5):
+    with term.location(0, 3):
         rank = benchRecruit['rank']
         color = rankColors[rank]
         passiveText = ag.formatPassiveText(benchRecruit['surname'])
@@ -72,9 +72,9 @@ def renderRecruitTab(benchRecruit, guildRoster, guildBank, rerollsLeft, renown):
         print(term.bold_white(reroll_text) if rerollsLeft > 0 else term.dimgray(reroll_text))
 
 def renderQuestTab(questSlots, selectedQuestIndex, taggedQuestSlot, partyQuest, partySize, partyMembers):
-    with term.location(0, 3):
+    with term.location(0, 2):
         print(term.bold_yellow("=== TRI-CONTRACT BULLETIN ==="))
-    with term.location(0, 5):
+    with term.location(0, 3):
         typeLabels = {"breadwinner": "★ Breadwinner", "benchmark": "◆ Benchmark", "highstakes": "▲ High Stakes"}
         typeColors = {"breadwinner": term.green, "benchmark": term.cyan, "highstakes": term.bold_red}
 
@@ -114,11 +114,11 @@ def renderQuestTab(questSlots, selectedQuestIndex, taggedQuestSlot, partyQuest, 
         print()
 
 def renderRosterTab(guildRoster, selectedIndex, renown, partyMembers=None, partySize=2, facilities=None):
-    with term.location(0, 3):
+    with term.location(0, 2):
         print(term.bold_green(f"=== GUILD ROSTER ({len(guildRoster)}/{ag.getRenownCfg(renown)['maxHeroes']}) ==="))
 
     if not guildRoster:
-        with term.location(0, 5):
+        with term.location(0, 3):
             print(term.italic("No adventurers hired yet! Visit the Recruitment tab (press 1)."))
         return
 
@@ -126,9 +126,15 @@ def renderRosterTab(guildRoster, selectedIndex, renown, partyMembers=None, party
         partyMembers = []
 
     partyActive = len(partyMembers) > 0
-    cols = 2 if len(guildRoster) > 5 else 1
+    cols = 2 if len(guildRoster) > 5 and term.width >= 90 else 1
     perCol = (len(guildRoster) + cols - 1) // cols
     xOff = [0, 78]
+
+    maxContentBottom = term.height - 6
+    maxRows = max(1, (maxContentBottom - 3) // 6) if perCol > 0 else 1
+    truncated = perCol > maxRows
+    if truncated:
+        perCol = maxRows
 
     for row in range(perCol):
         for col in range(cols):
@@ -137,7 +143,7 @@ def renderRosterTab(guildRoster, selectedIndex, renown, partyMembers=None, party
                 continue
             hero = guildRoster[idx]
             x = xOff[col]
-            y = 5 + row * 6
+            y = 3 + row * 6
             prefix = term.bold_yellow("> ") if idx == selectedIndex else "  "
             status_color = term.green if hero['status'] == "Available" else term.bold_red
             rank_color = rankColors.get(hero['rank'], term.white)
@@ -176,10 +182,14 @@ def renderRosterTab(guildRoster, selectedIndex, renown, partyMembers=None, party
                 else:
                     print(f"   Contract: {hero['contractDaysLeft']}/{hero['contractDays']} days left{trainingStr}")
 
+    if truncated:
+        with term.location(0, maxContentBottom - 1):
+            print(term.dimgray(f"... ({len(guildRoster)} heroes total — enlarge terminal or scroll to see all)"))
+
 def renderAccountantTab(guildBank, renown, month, daysLeft, taxQuota, guildRoster):
-    with term.location(0, 3):
+    with term.location(0, 2):
         print(term.bold_magenta("=== GUILD ACCOUNTANT ==="))
-    with term.location(0, 5):
+    with term.location(0, 3):
         cfg = ag.getRenownCfg(renown)
         totalUpkeep = ag.getTotalUpkeep(guildRoster)
         projectedTax = taxQuota - guildBank
@@ -212,9 +222,9 @@ def renderArmoryTab(guildArmory, armoryCategoryIndex, guildRoster, selectedIndex
     maxSlots = ar.getMaxSlots(renown)[cat]
     slotsUsed = len(guildArmory[cat])
 
-    with term.location(0, 3):
+    with term.location(0, 2):
         print(term.bold_yellow(f"=== GUILD ARMORY — {catLabel} ==="))
-    with term.location(0, 5):
+    with term.location(0, 3):
         fullSlots = f"{slotsUsed}/{maxSlots}"
         print(f"Slots: {term.bold_white(fullSlots)}  |  Guild Gold: {term.bold_yellow(str(guildBank))}g")
 
@@ -252,9 +262,9 @@ def renderArmoryTab(guildArmory, armoryCategoryIndex, guildRoster, selectedIndex
             print(f"[B] Buy a random item ({sampleGuildCost}g–{ar.tierConfig['mythril']['guildCost']}g)")
 
     if guildRoster:
-        with term.location(0, 5 + 4 + slotsUsed + 4):
+        with term.location(0, 3 + 4 + slotsUsed + 4):
             print(term.bold_cyan("── SELECTED HERO ──"))
-        with term.location(0, 5 + 4 + slotsUsed + 5):
+        with term.location(0, 3 + 4 + slotsUsed + 5):
             hero = guildRoster[selectedIndex]
             rank_color = rankColors.get(hero['rank'], term.white)
             rank_tag = rank_color(f"[{hero['rank']}]")
@@ -286,9 +296,9 @@ def renderFacilitiesTab(facilities, guildBank, renown, selectedFacilityIndex=0):
     active = fc.isActive(facilities, name)
     upkeep = info["dailyUpkeep"] if active else 0
 
-    with term.location(0, 3):
+    with term.location(0, 2):
         print(term.bold_cyan("=== GUILD FACILITIES ==="))
-    with term.location(0, 5):
+    with term.location(0, 3):
         switcher = []
         for i, fname in enumerate(fc.FACILITY_NAMES):
             label = fc.facilityConfig[fname]["name"]
@@ -436,13 +446,13 @@ def showMonthlyRecap(d):
     term.inkey()
 
 def renderRaidTab(raidBoss, raidStatus, guildRoster, raidResult):
-    with term.location(0, 3):
+    with term.location(0, 2):
         print(term.bold_red("=== RAID EXPEDITION ==="))
     if raidBoss is None:
-        with term.location(0, 5):
+        with term.location(0, 3):
             print(term.italic("Reach Renown 5 to challenge the raid boss."))
         return
-    with term.location(0, 5):
+    with term.location(0, 3):
         print(f"Boss:        {term.bold_white(raidBoss['name'])}")
         print(f"Stat Focus:  {raidBoss['statNeeded']}")
         print(f"Waves:       {raidBoss['numWaves']}  |  Boss Phases: {raidBoss['numPhases']}")
